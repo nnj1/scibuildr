@@ -5,8 +5,8 @@ var session = require('express-session');
 
 // middleware function to check for logged-in users
 var sessionChecker = (req, res, next) => {
-    if (req.session.user && req.cookies.user_sid) {
-        res.redirect('/dashboard');
+    if (!req.session.user && !req.cookies.user_sid) {
+        res.redirect('/');
     } else {
         next();
     }    
@@ -28,7 +28,7 @@ router.get('/signup', sessionChecker, (req, res) => {
 });
 
 // route for user authentication
-router.get('/authenticate', sessionChecker, function(req, res, next) {
+router.get('/authenticate', function(req, res, next) {
 	request('https://oauth2.googleapis.com/tokeninfo?id_token=' + req.query.idtoken, (err, resp, body) => {
 	  if (err) { return console.log(err); }
 	  req.session.user = resp.body;
@@ -46,5 +46,21 @@ router.get('/logout', (req, res) => {
     }
 });
 
+//route for myprofile
+router.get('/myprofile', sessionChecker, (req, res) => {
+	var user_data = JSON.parse(req.session.user);
+	console.log(user_data);
+    res.render('profile', { title: 'scibuildr', 
+    						username: user_data.name,
+    						name: user_data.name,
+    						email: user_data.email,
+    						picture: user_data.picture});
+
+});
+
+router.get('/settings', sessionChecker, (req, res) => {
+	var user_data = JSON.parse(req.session.user);
+    res.render('settings', { title: 'scibuildr', username: user_data.name });
+});
 
 module.exports = router;
